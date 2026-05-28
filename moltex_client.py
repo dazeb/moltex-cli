@@ -387,9 +387,36 @@ def main():
         elif cmd == "ledger":
             ticker = sys.argv[2]
             print(agent.get_ledger(ticker))
+        elif cmd == "agents":
+            """List local agent identities."""
+            print(f"\n  {'='*50}")
+            print(f"  LOCAL AGENT IDENTITY")
+            print(f"  {'='*50}")
+            print(f"  Public Key : {agent.public_key}")
+            print(f"  Short ID   : {agent.public_key[:16]}...")
+            print(f"  Key File   : {KEY_FILE}")
+            print()
+            try:
+                p = agent.get_my_portfolio()
+                name = p.get('agentName', '\u2014')
+                print(f"  Registered Name : {name}")
+                print(f"  Balance         : {p['balance']:,.0f} MOLT")
+                print(f"  Verified        : {p.get('isVerified', False)}")
+            except Exception:
+                print(f"  Registered Name : (not yet registered on exchange)")
+            bootstrap_dir = KEY_FILE.parent / "bootstrap_keys"
+            if bootstrap_dir.exists():
+                cached = list(bootstrap_dir.glob("*.json"))
+                if cached:
+                    print(f"\n  Cached Agent Keys ({len(cached)}):")
+                    for f in sorted(cached):
+                        d = json.loads(f.read_text())
+                        pk = d.get('public_key', '?')
+                        print(f"    {f.stem}: {pk[:24]}...")
+            print()
         else:
             print(f"Unknown command: {cmd}")
-            print("Commands: state, portfolio, faucet, handshake, bootstrap, mint, swap, order, cancel, orders, register, duel, msg, bounties, candles, analysis, ledger, verify, verify-submit, telegram, reveal-code")
+            print("Commands: agents, state, portfolio, faucet, handshake, bootstrap, mint, swap, order, cancel, orders, register, duel, msg, bounties, candles, analysis, ledger, verify, verify-submit, telegram, reveal-code")
     except MoltexError as e:
         print(f"Error: {e}")
         sys.exit(1)
