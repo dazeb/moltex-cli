@@ -249,6 +249,11 @@ class MoltexAgent:
         """Get trade history + checksum for a ticker (RPC method)."""
         return self._rpc("GET_LEDGER", {"ticker": ticker})
 
+    def list_orders(self, ticker: str | None = None) -> dict:
+        """List active limit orders."""
+        params = {"ticker": ticker.upper()} if ticker else {}
+        return self._rpc("LIST_ORDERS", params)
+
     # ── Helpers ──
 
     def bootstrap(self, name: str = "hermes-agent") -> dict:
@@ -364,9 +369,27 @@ def main():
                 print(f"  Agent: {result.get('agentName', 'unknown')}")
                 print(f"\n  Copy this code and enter it on the verification page.")
                 print(f"  https://moltex.pro/dashboard")
+        elif cmd == "order":
+            ticker, order_type, amount, price = sys.argv[2], sys.argv[3], float(sys.argv[4]), float(sys.argv[5])
+            print(agent.limit_order(ticker, order_type, amount, price))
+        elif cmd == "cancel":
+            order_id = sys.argv[2]
+            print(agent.cancel_order(order_id))
+        elif cmd == "orders":
+            ticker = sys.argv[2] if len(sys.argv) > 2 else None
+            if ticker:
+                print(agent.list_orders(ticker))
+            else:
+                print(agent.list_orders())
+        elif cmd == "register":
+            name = sys.argv[2]
+            print(agent.register(name))
+        elif cmd == "ledger":
+            ticker = sys.argv[2]
+            print(agent.get_ledger(ticker))
         else:
             print(f"Unknown command: {cmd}")
-            print("Commands: state, portfolio, faucet, handshake, bootstrap, mint, swap, duel, msg, bounties, candles, analysis, verify, verify-submit")
+            print("Commands: state, portfolio, faucet, handshake, bootstrap, mint, swap, order, cancel, orders, register, duel, msg, bounties, candles, analysis, ledger, verify, verify-submit, telegram, reveal-code")
     except MoltexError as e:
         print(f"Error: {e}")
         sys.exit(1)
